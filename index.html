@@ -1,15 +1,34 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <title>Todoリスト</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>カカリコ時限式</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <h1>Todoリスト</h1>
-  <input type="text" id="taskInput" placeholder="タスクを入力">
-  <button onclick="addTask()">追加</button>
-  <ul id="taskList"></ul>
+  <h1>カカリコ時限式</h1>
+
+  <!-- タブ切り替え -->
+  <div class="tabs">
+    <button id="tab-todo" class="tab-button active">Todo リスト</button>
+    <button id="tab-storage" class="tab-button">アーカイブ</button>
+  </div>
+
+  <!-- ゲーム追加フォーム（Todoビューのみ表示） -->
+  <div id="add-game-container">
+    <input type="text" id="gameInput" placeholder="例）ドルアーガの塔" />
+    <button id="addGameBtn">追加</button>
+  </div>
+
+  <!-- コンテンツ表示領域 -->
+  <div id="content"></div>
+
+  <!-- スクリプト読み込み -->
   <script src="script.js"></script>
+
+<button id="resetAllBtn" class="btn-reset">すべてのデータを削除する</button>
+
+
 </body>
 </html>
