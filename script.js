@@ -411,7 +411,7 @@ function createGameItem_Todo(title, data, idx) {
   // 「✓ 完了」ボタン (ゲームごとアーカイブ移動)
   const btnArchiveGame = document.createElement("button");
   btnArchiveGame.className = "btn-status btn-ghost";
-  btnArchiveGame.textContent = "✓ 完了";
+  btnArchiveGame.textContent = "✓";
   btnArchiveGame.addEventListener("click", (e) => {
     e.stopPropagation();
     if (confirm(`${title} のすべてのタスクをアーカイブに移しますか？`)) {
