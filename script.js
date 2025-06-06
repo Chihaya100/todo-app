@@ -1,25 +1,29 @@
 // ============================
 // データ構造＆順序配列
 // ============================
-let games = {};             // { "ゼルダの伝説": { status: "...", todos: [...], done: [...] }, ... }
-let archives = {};          // { "ゼルダの伝説": ["タスク1", "タスク2"], ... }
-let gameOrder = [];         // タイトルを並べ替えるための配列。localStorage から読み込む
-let currentTab = "todo";    // "todo" または "storage"
+let games = {};        // { "ゼルダの伝説": { status:"todo", lastUpdated:…, todos:[…], done:[…] }, … }
+let archives = {};     // { "ゼルダの伝説": ["タスクA","タスクB"], … }
+let gameOrder = [];    // タイトルの並び順を保持する配列。localStorage から復元する
+let currentTab = "todo"; // "todo" または "storage"
 
 // ============================
 // 初回読み込み処理
 // ============================
 window.onload = () => {
-  loadGames();      // games, gameOrder を localStorage から読み込む
-  loadArchives();   // archives を localStorage から読み込む
+  // 1) games と archives をロード
+  loadGames();      // localStorage の "gamesData" を読み出して games にセット
+  loadArchives();   // localStorage の "archivesData" を読み出して archives にセット
 
-  // タブ切り替え
+  // 2) gameOrder をロード（games の既存キーを順序通りに gameOrder へ）
+  loadGameOrder();  // localStorage の "gameOrder" を読み込む or 初期化
+
+  // 3) タブ切り替えボタンのイベント登録
   document.getElementById("tab-todo")
     .addEventListener("click", () => switchTab("todo"));
   document.getElementById("tab-storage")
     .addEventListener("click", () => switchTab("storage"));
 
-  // ゲーム追加ボタン
+  // 4) ゲーム追加ボタンのイベント登録
   document.getElementById("addGameBtn")
     .addEventListener("click", () => {
       const input = document.getElementById("gameInput");
@@ -29,7 +33,7 @@ window.onload = () => {
       input.value = "";
     });
 
-  // 全データリセットボタン
+  // 5) 全データをリセットするボタンのイベント登録
   document.getElementById("resetAllBtn")
     .addEventListener("click", () => {
       if (confirm("すべてのデータを削除しますか？")) {
@@ -44,9 +48,13 @@ window.onload = () => {
       }
     });
 
+  // 6) 最終的なレンダリング
   render();
 };
 
+// ============================
+// タブ切り替え処理
+// ============================
 function switchTab(tabName) {
   currentTab = tabName;
   document.getElementById("tab-todo").classList.toggle("active", tabName === "todo");
@@ -56,21 +64,19 @@ function switchTab(tabName) {
 }
 
 // ============================
-// ゲーム追加
+// ゲームを追加
 // ============================
 function addGame(title) {
   if (!games[title]) {
-    // 新しいゲームを登録
+    // 新規ゲームとして登録
     games[title] = { status: "todo", lastUpdated: Date.now(), todos: [], done: [] };
-
-    // gameOrder にも末尾追加
+    // gameOrder に末尾追加
     gameOrder.push(title);
   } else {
-    // 既存のタイトルが archve だった場合 → todo に戻す
+    // 既存のタイトルがあった場合 → status を todo に戻す
     games[title].status = "todo";
     games[title].lastUpdated = Date.now();
-    // すでに gameOrder にあれば何もしない
-    // もし gameOrder になければ末尾追加
+    // gameOrder になければ末尾追加
     if (!gameOrder.includes(title)) {
       gameOrder.push(title);
     }
@@ -85,34 +91,32 @@ function addGame(title) {
 function archiveGame(title) {
   if (!games[title]) return;
 
-  // ── 「games[title].todos」 が空 or undefined のときでも、
-  //     archives[title] を空配列として作っておく
+  // 1) いま現存する todos 配列 (未完了タスク) を全部 archives[title] にコピーする
   const remainingTodos = games[title].todos || [];
 
-  // archives[title] がまだなければ「空配列」で初期化
+  // archives[title] がなければ「空配列」で初期化
   if (!archives[title]) {
     archives[title] = [];
   }
 
-  // もし残っているタスクがあれば、それもまとめて追加する
+  // もし残っているタスクがあれば、同じものを二重登録しないように追加
   remainingTodos.forEach(taskText => {
     if (!archives[title].includes(taskText)) {
       archives[title].push(taskText);
     }
   });
 
-  // つづいて games[title] 自体を削除し、gameOrder からも外してしまう
+  // 2) games からタイトルそのものを削除し、gameOrder からも外す
   delete games[title];
   const idx = gameOrder.indexOf(title);
   if (idx >= 0) gameOrder.splice(idx, 1);
 
-  // 保存＆再描画
   saveAll();
   render();
 }
 
 // ============================
-// ゲーム完全削除 （タイトル横の × / Todoビュー）
+// ゲームを完全削除 (タイトル横の × / Todoビュー) 
 // ============================
 function removeGame(title) {
   if (!games[title]) return;
@@ -127,14 +131,13 @@ function removeGame(title) {
 }
 
 // ============================
-// タイトルをドラッグ&ドロップで並べ替えたあと、配列を更新
-// （drop イベント内から呼ぶ）
+// タイトルをドラッグして並べ替えたあとで gameOrder を更新
+// drop イベントから呼び出す
 // ============================
 function reorderGameOrder(fromIndex, toIndex) {
-  // arr.splice(toIndex, 0, arr.splice(fromIndex, 1)[0])
   const movedTitle = gameOrder.splice(fromIndex, 1)[0];
   gameOrder.splice(toIndex, 0, movedTitle);
-  saveGameOrder();  // 並び順のみ保存
+  saveGameOrder(); // 並び順だけを保存
   render();
 }
 
@@ -159,7 +162,7 @@ function archiveTodo(title, index) {
   const removed = games[title].todos.splice(index, 1)[0];
   if (!removed) return;
 
-  // archives[title] に追加
+  // archives[title] に存在しなければ初期化
   if (!archives[title]) archives[title] = [];
   if (!archives[title].includes(removed)) {
     archives[title].push(removed);
@@ -182,14 +185,10 @@ function removeTodo(title, index) {
 }
 
 // ============================
-// Todo の取り消し線 on/off（ここでは完成扱いにしないので 日付管理はなし）
+// Todo の取り消し線 on/off（完了フラグのトグル）
 // ============================
 function toggleDone(title, index) {
-  const liTasks = games[title].todos;
-  if (!liTasks) return;
-
-  // 今回は「見た目だけ取り消し線」で扱う場合は、doneフラグ + localStorage 保存しておけばOKです。
-  // たとえば：games[title].done[index] = !games[title].done[index];
+  if (!games[title]) return;
   if (!games[title].done) games[title].done = [];
   games[title].done[index] = !games[title].done[index];
   saveAll();
@@ -202,19 +201,18 @@ function toggleDone(title, index) {
 function restoreArchive(title) {
   if (!archives[title]) return;
 
-  // すべてのアーカイブ済みタスクを games[title].todos に追加
-  const taskList = archives[title];
+  // 1) すべてのアーカイブ済みタスクを games[title].todos に追加
   if (!games[title]) {
     games[title] = { status: "todo", lastUpdated: Date.now(), todos: [], done: [] };
     gameOrder.push(title);
   }
-  taskList.forEach(text => {
+  archives[title].forEach(text => {
     if (!games[title].todos.includes(text)) {
       games[title].todos.push(text);
     }
   });
 
-  // archives から削除
+  // 2) archives から完全削除
   delete archives[title];
 
   saveAll();
@@ -264,7 +262,7 @@ function saveAll() {
 }
 
 // ============================
-// localStorage から 読み込み (games  + done フラグ)
+// localStorage から 読み込み (games + done フラグ)
 // ============================
 function loadGames() {
   const saved = localStorage.getItem("gamesData");
@@ -278,11 +276,9 @@ function loadGames() {
     games = {};
   }
 
-  // 後方互換措置：もし todos が文字列配列の場合はオブジェクトに変換
+  // 後方互換措置：もし todos が存在しない or 文字列配列なら初期化する
   Object.keys(games).forEach(title => {
-    if (Array.isArray(games[title].todos)) {
-      // すでに文字列配列のときはそのまま
-    } else {
+    if (!Array.isArray(games[title].todos)) {
       games[title].todos = [];
     }
     if (!Array.isArray(games[title].done)) {
@@ -319,12 +315,14 @@ function loadGameOrder() {
       gameOrder = [];
     }
   } else {
-    // 初回起動時は gameOrder が空なので、まず games のキーすべてを順番に入れておく
+    // 初回起動時は、まず games の鍵すべてを gameOrder に流し込む
     gameOrder = Object.keys(games);
   }
 
-  // 「games にすでにないタイトル」は除外、かつ「games にあって gameOrder にないタイトル」を末尾に追加
+  // もし gameOrder にあるけれど games に存在しないタイトルがあれば除去
   gameOrder = gameOrder.filter(title => games.hasOwnProperty(title));
+
+  // もし games にあって gameOrder に含まれていないタイトルがあれば末尾に追加
   Object.keys(games).forEach(title => {
     if (!gameOrder.includes(title)) {
       gameOrder.push(title);
@@ -333,31 +331,30 @@ function loadGameOrder() {
 }
 
 // ============================
-// 最終的な描画処理
+// メイン描画関数
 // ============================
 function render() {
   const container = document.getElementById("content");
   container.innerHTML = "";
 
-  // …（省略：gameOrder に沿った転送。既存のタブ処理）…
+  // gameOrder が空（＝未ロード）の場合はロードする
+  if (gameOrder.length === 0) {
+    loadGameOrder();
+  }
 
   if (currentTab === "todo") {
-    // （省略：Todoビューの描画）
+    // ===== Todo リストビュー =====
     gameOrder.forEach((title, idx) => {
-      if (games[title] && games[title].status === "todo") {
-        container.appendChild(createGameItem_Todo(title, games[title], idx));
-      }
+      if (!games[title] || games[title].status !== "todo") return;
+      container.appendChild(createGameItem_Todo(title, games[title], idx));
     });
   }
   else {
     // ===== アーカイブビュー =====
-
-    // 変更点①：Object.keys(archives) をそのまま回す（配列長に関係なく表示）
+    // 空配列でもキーがあればタイトルだけ表示する
     Object.keys(archives).forEach(title => {
-      // もし archives[title] が存在する（たとえ空配列でも）なら描画対象にする
-      if (archives.hasOwnProperty(title)) {
-        container.appendChild(createGameItem_Archive(title, archives[title]));
-      }
+      if (!archives.hasOwnProperty(title)) return;
+      container.appendChild(createGameItem_Archive(title, archives[title]));
     });
   }
 }
@@ -371,46 +368,47 @@ function createGameItem_Todo(title, data, idx) {
   const wrapper = document.createElement("div");
   wrapper.className = "game-item";
   wrapper.setAttribute("draggable", "true");
-  wrapper.dataset.index = idx; // 後で dragstart/drop で参照するため
+  wrapper.dataset.index = idx; // ドラッグ操作時の「何番目か」を記録
 
-  // ── dragstart イベント
+  // ── dragstart イベント (ドラッグ開始時)
   wrapper.addEventListener("dragstart", (e) => {
-    e.dataTransfer.setData("text/plain", idx); // 「何番目」を渡す
+    e.dataTransfer.setData("text/plain", idx); 
     e.dataTransfer.effectAllowed = "move";
-    // 見た目を少し変えたければここで e.target.classList.add("dragging") など
+    // （必要なら CSS で .dragging クラスを付けるなど可能）
   });
 
-  // ── dragover / drop イベント
+  // ── dragover イベント (ドラッグした要素が上に来たとき)
   wrapper.addEventListener("dragover", (e) => {
-    e.preventDefault(); // drop を許可するために必要
+    e.preventDefault(); // drop を許可
+    wrapper.classList.add("dragover"); // CSS の強調用クラス
     e.dataTransfer.dropEffect = "move";
-    wrapper.classList.add("dragover"); // CSS で「ドロップ可能領域」のハイライトを出すときに使う
   });
   wrapper.addEventListener("dragleave", (e) => {
     wrapper.classList.remove("dragover");
   });
+
+  // ── drop イベント (ドロップ時)
   wrapper.addEventListener("drop", (e) => {
     e.preventDefault();
     wrapper.classList.remove("dragover");
     const fromIndex = Number(e.dataTransfer.getData("text/plain"));
     const toIndex = Number(wrapper.dataset.index);
-
     if (!isNaN(fromIndex) && !isNaN(toIndex) && fromIndex !== toIndex) {
       reorderGameOrder(fromIndex, toIndex);
     }
   });
 
-  // ── ゲームヘッダー (タイトル＋ボタン群)
+  // ── ゲームヘッダー (タイトル＋ボタン)
   const header = document.createElement("div");
   header.className = "game-header";
 
-  // タイトル表示
+  // タイトルスパン
   const spanTitle = document.createElement("span");
   spanTitle.className = "title";
   spanTitle.textContent = title;
   header.appendChild(spanTitle);
 
-  // 「✓ 完了」ボタン：ゲームごとアーカイブへ
+  // 「✓ 完了」ボタン (ゲームごとアーカイブ移動)
   const btnArchiveGame = document.createElement("button");
   btnArchiveGame.className = "btn-status btn-ghost";
   btnArchiveGame.textContent = "✓ 完了";
@@ -421,7 +419,7 @@ function createGameItem_Todo(title, data, idx) {
     }
   });
 
-  // 「×」ボタン：ゲームごと完全削除
+  // 「×」ボタン (ゲームごと完全削除)
   const btnRemoveGame = document.createElement("button");
   btnRemoveGame.className = "btn-delete-game btn-ghost";
   btnRemoveGame.textContent = "×";
@@ -438,7 +436,7 @@ function createGameItem_Todo(title, data, idx) {
 
   wrapper.appendChild(header);
 
-  // ── Todo 本体
+  // ── Todo 本体部分
   const todoContainer = document.createElement("div");
   todoContainer.className = "todo-container";
   todoContainer.style.display = "block";
@@ -456,10 +454,10 @@ function createGameItem_Todo(title, data, idx) {
     }
     li.appendChild(spanText);
 
-    // 取り消し線用ボタン
+    // タスクの取り消し線＋完了フラグボタン
     const btnToggleDone = document.createElement("button");
-    btnToggleDone.textContent = "─"; 
     btnToggleDone.className = "btn-toggle-done btn-ghost";
+    btnToggleDone.textContent = "─";
     btnToggleDone.addEventListener("click", (e) => {
       e.stopPropagation();
       toggleDone(title, tidx);
@@ -476,7 +474,7 @@ function createGameItem_Todo(title, data, idx) {
     });
     li.appendChild(btnArchiveTodo);
 
-    // タスクだけ削除するボタン
+    // タスク誤字削除ボタン
     const btnRemoveTodo = document.createElement("button");
     btnRemoveTodo.className = "btn-remove-todo btn-ghost";
     btnRemoveTodo.textContent = "×";
@@ -494,7 +492,6 @@ function createGameItem_Todo(title, data, idx) {
   // ── Todo 追加フォーム
   const addTodoDiv = document.createElement("div");
   addTodoDiv.className = "add-todo-container";
-
   const input = document.createElement("input");
   input.type = "text";
   input.placeholder = "新しいタスクを入力";
@@ -552,7 +549,7 @@ function createGameItem_Archive(title, archivedList) {
 
   wrapper.appendChild(header);
 
-  // ── タスク一覧部分（もし archivedList が空でも、タイトルだけは表示したい）
+  // ── アーカイブ済みタスク一覧
   const todoContainer = document.createElement("div");
   todoContainer.className = "todo-container";
   todoContainer.style.display = "block";
@@ -560,9 +557,7 @@ function createGameItem_Archive(title, archivedList) {
   const ul = document.createElement("ul");
   ul.className = "todo-list";
 
-  // archivedList が空配列 [] の場合はループしないが、
-  // <div class="todo-container"><ul class="todo-list"></ul></div> は生成されるので
-  // 「タイトルだけ」が見える
+  // archivedList が空でも <ul> 要素だけは生成される → タイトルだけ表示される
   archivedList.forEach((text) => {
     const li = document.createElement("li");
     const spanText = document.createElement("span");
@@ -574,6 +569,5 @@ function createGameItem_Archive(title, archivedList) {
 
   todoContainer.appendChild(ul);
   wrapper.appendChild(todoContainer);
-
   return wrapper;
 }
