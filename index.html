@@ -3,11 +3,96 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>game to do</title>
+  <title>Game to do</title>
   <link rel="stylesheet" href="style.css" />
+  <style>
+    /* ── 擬似広告（アンカー広告風）のスタイル ── */
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to   { transform: translateY(0); }
+    }
+
+    #character-ad {
+      position: fixed;           /* ← ここを fixed のみに */
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 80px;
+      background: #5e2e0b;
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      box-sizing: border-box;
+      z-index: 9999;
+      font-family: sans-serif;
+
+      border-top: 1px solid #333;
+      box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.3);
+
+      transform: translateY(100%);
+      animation: slideUp 0.3s ease-out forwards;
+      /* position: relative; ← これを削除 */
+    }
+
+    #char-img {
+      height: 56px;
+      width: 56px;
+      object-fit: contain;
+      image-rendering: pixelated;
+      margin-right: 12px;
+    }
+
+    #speech-box {
+      flex: 1;
+      background: #ffb347;
+      border: 2px solid #222;
+      border-radius: 20px;
+      padding: 6px 12px;
+      color: #222;
+      font-size: 1.4em;       /* 必要なら調整 */
+      line-height: 1.2em;
+      white-space: pre-wrap;
+      max-width: calc(100% - 56px - 32px); /* 画像幅＋ボタン幅（16px＋余白16px分）を除く */
+      height: 56px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+    }
+
+    #speech-text {
+      display: inline-block;
+      vertical-align: top;
+    }
+
+    #close-button {
+      position: absolute;  /* これを使う場合、親に position: relative は不要でも OK
+                            要素自体が fixed の下の層なので、
+                            このまま top/right で配置できます */
+      top: 8px;
+      right: 5px;
+      width: 12px;
+      height: 12px;
+      padding: 0;
+      font-size: 10px;
+      line-height: 4px;
+      color: #5e2e0b;
+      background: #5e2e0b;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #close-button:hover {
+      background: rgba(112, 39, 10, 0.9);
+    }
+  </style>
 </head>
 <body>
-  <h1>game to do</h1>
+  <h1>Game to do</h1>
 
   <!-- タブ切り替え -->
   <div class="tabs">
@@ -15,9 +100,14 @@
     <button id="tab-storage" class="tab-button">アーカイブ</button>
   </div>
 
-  <!-- ゲーム追加フォーム（Todoビューのみ表示） -->
+  <!-- ゲーム追加フォーム -->
   <div id="add-game-container">
-    <input type="text" id="gameInput" placeholder="例）ドルアーガの塔" />
+    <input
+      type="text"
+      id="gameInput"
+      placeholder="例）ドルアーガの塔"
+      style="font-size: 1.2em; padding: 4px 8px;"
+    />
     <button id="addGameBtn">追加</button>
   </div>
 
@@ -27,8 +117,80 @@
   <!-- スクリプト読み込み -->
   <script src="script.js"></script>
 
-<button id="resetAllBtn" class="btn-reset">すべてのデータを削除する</button>
+  <button id="resetAllBtn" class="btn-reset">すべてのデータを削除する</button>
 
+  <!-- ── 擬似広告（アンカー広告風）ブロック ── -->
+  <div id="character-ad">
+    <img src="会話広告.png" alt="キャラ" id="char-img">
+    <div id="speech-box">
+      <span id="speech-text"></span>
+    </div>
+    <button id="close-button">×</button>
+  </div>
 
+  <script>
+    // キーワードごとに「テキスト」と「速度(ms)」を指定
+    const keywordResponses = {
+      "ペルソナ４": {
+        text:  "犯人は足立",
+        speed: 1000
+      },
+      "ペルソナ３": {
+        text:  "ジンっぽいタカヤとタカヤっぽいジン",
+        speed: 60
+      },
+      "ポートピア連続殺人事件": {
+        text:  "犯人はヤス",
+        speed: 160
+      },
+      "都市伝説解体センター": {
+        text:  "センターにいるのは二人だけ",
+        speed: 300
+      }
+    };
+
+    // 要素を取得
+    const gameInput   = document.getElementById("gameInput");
+    const speechEl    = document.getElementById("speech-text");
+    const adEl        = document.getElementById("character-ad");
+    const closeButton = document.getElementById("close-button");
+
+    let typingTimer = null;
+
+    // ×ボタンで擬似広告を非表示にする
+    closeButton.addEventListener("click", () => {
+      adEl.style.display = "none";
+    });
+
+    // タイピング風に1文字ずつ表示する関数
+    function typeText(text, intervalMs) {
+      if (typingTimer) clearInterval(typingTimer);
+
+      let idx = 0;
+      speechEl.textContent = "";
+      typingTimer = setInterval(() => {
+        if (idx < text.length) {
+          speechEl.textContent += text[idx++];
+        } else {
+          clearInterval(typingTimer);
+        }
+      }, intervalMs);
+    }
+
+    // ゲームタイトル入力欄を監視し、キーワードが含まれたら対応する会話を表示
+    gameInput.addEventListener("input", () => {
+      const value = gameInput.value;
+      for (const keyword in keywordResponses) {
+        if (value.includes(keyword)) {
+          const { text, speed } = keywordResponses[keyword];
+          typeText(text, speed);
+          return;
+        }
+      }
+      // キーワードマッチなしならクリア
+      if (typingTimer) clearInterval(typingTimer);
+      speechEl.textContent = "";
+    });
+  </script>
 </body>
 </html>
