@@ -1,0 +1,398 @@
+/* ===== 全体 ===== */
+body {
+  /* 1) ベースにレンガ色を指定 */
+  background-color: #d18c5b; /* 画像に近いオレンジブラウン */
+
+  /* 2) 小さなドット状のノイズを重ねてざらつき感を表現 */
+  background-image:
+    /* 暗めの粒（影） */
+    repeating-radial-gradient(
+      circle at 0 0,
+      rgba(0, 0, 0, 0.08) 0px,
+      rgba(0, 0, 0, 0.08) 0.5px,
+      transparent 0.6px
+    ),
+    /* 明るめの粒（ハイライト） */
+    repeating-radial-gradient(
+      circle at 2px 2px,
+      rgba(255, 255, 255, 0.05) 0px,
+      rgba(255, 255, 255, 0.05) 0.5px,
+      transparent 0.6px
+    );
+
+  /* ノイズドットの密度・繰り返し間隔を調整 */
+  background-size: 10px 10px, 14px 14px;
+
+  /* 通常の文字色・フォントなど */
+  color: #5C2D1C; /* 深みのあるブラウン */
+  font-family: sans-serif;
+  max-width: 600px;
+  margin: 20px auto;
+  padding: 0 10px;
+  text-align: left;
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 20px;
+  color: #4A1E10; /* より濃いブラウン */
+}
+
+/* ===== タブ ===== */
+.tabs {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+.tab-button {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #C79A7F;        /* オレンジブラウンの薄いボーダー */
+  background-color: #E9C6A7;        /* 薄いコーラルベージュ */
+  cursor: pointer;
+  outline: none;
+  color: #5C2D1C;                   /* テキストは深いブラウン */
+  transition: background-color 0.2s ease;
+}
+
+.tab-button:hover {
+  background-color: #D18C5B;        /* ホバー時は濃いオレンジブラウン */
+}
+
+.tab-button.active {
+  background-color: #B35A1B;        /* 選択中はレンガ色に近いディープオレンジ */
+  color: #F3E0D1;                   /* テキストは淡い背景色に */
+  font-weight: bold;
+}
+
+/* ===== ゲーム追加フォーム ===== */
+#add-game-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+#add-game-container input {
+  flex: 1;
+  padding: 8px;
+  font-size: 16px;
+  background-color: #FFF1EA; /* ほんのりピーチピンク */
+  border: 1px solid #D6A48D; /* ややダークなサンドベージュ */
+  color: #5C2D1C;
+  border-radius: 4px;
+}
+
+#add-game-container button {
+  padding: 8px 12px;
+  margin-left: 8px;
+  font-size: 16px;
+  background-color: #E4B992; /* ソフトなオレンジベージュ */
+  border: 1px solid #B58D6D;
+  color: #FFF1EA;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+#add-game-container button:hover {
+  background-color: #C98E5C; /* ホバー時はやや濃いめのオレンジ */
+}
+
+/* ===== ゲーム項目 ===== */
+.game-item {
+  border: 1px solid #D4B09A;      /* 薄いサンドベージュのボーダー */
+  margin-bottom: 12px;
+  border-radius: 4px;
+  overflow: hidden;
+  background-color: #FAE8DD;      /* ふわっとしたクリームベージュ */
+}
+
+.game-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #F5D9C3;      /* 温かみのあるベージュ */
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.game-header .title {
+  flex: 1;
+  font-size: 18px;
+  color: #5C2D1C;
+}
+
+/* ボタンを右端で横並びにする用のラッパー */
+.game-header .btn-group {
+  display: flex;
+  gap: 4px;
+}
+
+.game-header .btn-status,
+.btn-delete-game {
+  font-family: inherit;
+  font-size: 16px;
+  color: #5C2D1C; /* 暖色系の落ち着いた茶色 */
+}
+
+/* ===== Todoリスト ===== */
+.todo-container {
+  padding: 10px 12px;
+  background-color: #FAE8DD;      /* 上と揃えて柔らかなベージュ */
+}
+
+.todo-list {
+  list-style-type: none;
+  padding-left: 0;
+  margin-bottom: 8px;
+}
+
+.todo-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 0;
+  border-bottom: 1px solid #E0D0C0; /* 薄いグレージュ */
+}
+
+.todo-list li:last-child {
+  border-bottom: none;
+}
+
+.todo-list li .todo-text {
+  flex: 1;
+  color: #4A1E10; /* 少し濃いめのブラウン */
+}
+
+/* タスクの「削除」や「チェック」などの小ボタン */
+.btn-delete-todo,
+.btn-toggle-done,
+.btn-archive,
+.btn-remove-todo {
+  font-size: 16px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  background-color: #F3E0D1;       /* ほのかにクリーム掛かったベージュ */
+  color: #5C2D1C;                  /* テキストは深いブラウン */
+  border: 1px solid #B89980;       /* サンドベージュの枠線 */
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.btn-delete-todo:hover,
+.btn-remove-todo:hover {
+  background-color: #B35A1B;       /* ホバー時はディープオレンジ寄り */
+  color: #FFF1EA;                 /* 文字を淡いクリームに */
+}
+
+.btn-toggle-done:hover,
+.btn-archive:hover {
+  background-color: #D18C5B;       /* ホバー時はやや濃いめのオレンジブラウン */
+  color: #FFF1EA;
+}
+
+.todo-text.done {
+  text-decoration: line-through;
+  color: #9B7A66;                  /* 取り消し線後はダスティブラウン */
+}
+
+/* ===== Todo追加欄 ===== */
+.add-todo-container {
+  display: flex;
+  margin-top: 8px;
+}
+
+.add-todo-container input {
+  flex: 1;
+  padding: 6px;
+  font-size: 14px;
+  background-color: #FFF6F0;      /* ごく淡いピーチ */
+  border: 1px solid #D6BFAE;
+  color: #5C2D1C;
+  border-radius: 4px;
+}
+
+.add-todo-container button {
+  padding: 6px 10px;
+  margin-left: 6px;
+  font-size: 14px;
+  background-color: #E4B992;      /* 先ほどと同じオレンジベージュ */
+  border: 1px solid #B58D6D;
+  color: white;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.add-todo-container button:hover {
+  background-color: #C98E5C;      /* 濃いめのオレンジ */
+}
+
+/* ===== ストレージ（アーカイブ）ビュー ===== */
+.storage-container {
+  padding: 10px 12px;
+  background-color: #FAE8DD;      /* 同じく柔らかなベージュ */
+}
+
+.storage-list {
+  list-style-type: none;
+  padding-left: 0;
+}
+
+.storage-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid #E0D0C0;
+}
+
+.storage-list li:last-child {
+  border-bottom: none;
+}
+
+.storage-list li .title {
+  flex: 1;
+  color: #5C2D1C;                  /* 深いブラウン */
+}
+
+.storage-list li .btn-return {
+  background-color: #E0D0C0;       /* アーカイブ戻すボタンはソフトグレージュ */
+  border: 1px solid #B58D6D;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #5C2D1C;
+  transition: background-color 0.2s ease;
+}
+
+.storage-list li .btn-return:hover {
+  background-color: #D18C5B;       /* ホバー時はソフトオレンジブラウン */
+  color: #FFF1EA;
+}
+
+/* ===== リセットボタン ===== */
+.btn-reset {
+  margin: 20px auto;
+  padding: 8px 16px;
+  display: block;
+  background-color: #A44;          /* 暗い赤ブラウン */
+  color: #FFF1EA;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1em;
+  transition: background-color 0.2s ease;
+}
+
+.btn-reset:hover {
+  background-color: #C55;         /* ホバー時は明度を高めた赤 */
+}
+
+/* ===== 共通：ゴーストボタン風 ===== */
+.btn-ghost {
+  background-color: transparent;
+  border: none;
+  color: inherit;
+  opacity: 0.6;
+  transition: background-color 0.2s ease, opacity 0.2s ease;
+  padding: 2px 8px;
+  font-size: 12px;
+  line-height: 1;
+  vertical-align: middle;
+  cursor: pointer;
+}
+
+.btn-ghost:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  opacity: 1;
+}
+
+/* ===== ✓ 完了ボタン ===== */
+.btn-status {
+  background-color: transparent;
+  border: none;
+  color: #5C2D1C; /* タスクチェックは深いブラウン */
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.btn-status:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  color: #2C1A0E; /* ホバー時はより濃いブラウン */
+}
+
+/* ===== アーカイブビュー用ボタン ===== */
+/* 「↩ 戻す」ボタン */ 
+.btn-restore {
+  background-color: transparent;
+  border: none;
+  color: #5C2D1C;  /* テーマに合わせたブラウン */
+  font-size: 16px;
+  padding: 2px 6px;
+  cursor: pointer;
+}
+
+.btn-restore:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  color: #2C1A0E;
+}
+
+/* 「×」（アーカイブ削除）ボタン */
+.btn-delete-archive {
+  background-color: transparent;
+  border: none;
+  color: #8A1E1E; /* ダークレッド */
+  font-size: 16px;
+  padding: 2px 6px;
+  margin-left: 8px; /* 少し間隔を空ける */
+  cursor: pointer;
+}
+
+.btn-delete-archive:hover {
+  background-color: rgba(198, 40, 40, 0.2);
+  color: #FFF1EA;
+  border-radius: 4px;
+}
+
+/* ===== タスク個別アーカイブボタン (✓) ===== */
+.btn-archive {
+  background-color: transparent;
+  border: none;
+  color: #5C2D1C;
+  font-size: 12px;
+  padding: 2px 6px;
+  cursor: pointer;
+}
+
+.btn-archive:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  color: #2C1A0E;
+}
+
+/* ===== 誤記削除ボタン (×) ===== */
+.btn-remove-todo {
+  background-color: transparent;
+  border: none;
+  color: #8A1E1E; /* ダークレッド */
+  font-size: 16px;
+  padding: 2px 6px;
+  margin-left: 4px;
+  cursor: pointer;
+}
+
+.btn-remove-todo:hover {
+  background-color: rgba(198, 40, 40, 0.2);
+  color: #FFF1EA;
+  border-radius: 4px;
+}
+
+.game-item.dragover {
+  box-shadow: inset 0 0 0 2px #B35A1B;
+  background-color: rgba(179, 90, 27, 0.1);
+}
